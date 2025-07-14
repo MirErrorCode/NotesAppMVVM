@@ -5,7 +5,7 @@ import androidx.navigation.NavHostController
 
 
 @Composable
-fun Notes(navController: NavHostController){
+fun Note(navController: NavHostController){
 
 
 
