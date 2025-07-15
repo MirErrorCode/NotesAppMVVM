@@ -9,6 +9,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import mir.errorcode.notesappmvvm.database.firebase.AppFirebaseRepository
 import mir.errorcode.notesappmvvm.database.room.AppRoomDatabase
 import mir.errorcode.notesappmvvm.database.room.repository.RoomRepository
 import mir.errorcode.notesappmvvm.model.Note
@@ -32,7 +33,14 @@ class MainViewModel(application : Application) : AndroidViewModel(application) {
                 REPOSITORY = RoomRepository(dao)
                 onSuccess()
             }
+            TYPE_FIREBASE -> {
+                REPOSITORY = AppFirebaseRepository()
+                REPOSITORY.connectToDatabase({onSuccess()}){
+                    { Log.d("checkData", "Error: ${it}")}
+                }
+            }
         }
+
     }
 
     fun addNote(note: Note, onSuccess: () -> Unit) {
