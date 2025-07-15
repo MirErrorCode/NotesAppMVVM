@@ -29,6 +29,10 @@ import mir.errorcode.notesappmvvm.MainViewModelFactory
 import mir.errorcode.notesappmvvm.model.Note
 import mir.errorcode.notesappmvvm.navigation.NavRoute
 import mir.errorcode.notesappmvvm.ui.theme.NotesAppMVVMTheme
+import mir.errorcode.notesappmvvm.utils.Constants.Keys.ADD_NEW_NOTE
+import mir.errorcode.notesappmvvm.utils.Constants.Keys.ADD_NOTE
+import mir.errorcode.notesappmvvm.utils.Constants.Keys.NOTE_SUBTITLE
+import mir.errorcode.notesappmvvm.utils.Constants.Keys.NOTE_TITLE
 
 
 @Composable
@@ -47,7 +51,7 @@ fun AddScreen(navController: NavHostController, viewModel: MainViewModel) {
             verticalArrangement = Arrangement.Center
         ) {
             Text(
-                text = "Add new note",
+                text = ADD_NEW_NOTE,
                 fontSize = 18.sp,
                 fontWeight = FontWeight.SemiBold,
                 modifier = Modifier.padding(vertical = 8.dp)
@@ -59,7 +63,7 @@ fun AddScreen(navController: NavHostController, viewModel: MainViewModel) {
                     title = it
                     isButtonEnables = title.isNotEmpty() && subtitle.isNotEmpty()
                                  },
-                label = {Text(text= "Note title")},
+                label = {Text(text= NOTE_TITLE)},
                 isError = title.isEmpty()
             )
             OutlinedTextField(
@@ -68,7 +72,7 @@ fun AddScreen(navController: NavHostController, viewModel: MainViewModel) {
                     subtitle = it
                     isButtonEnables = title.isNotEmpty() && subtitle.isNotEmpty()
                                  },
-                label = {Text(text= "Note subtitle")},
+                label = {Text(text= NOTE_SUBTITLE)},
                 isError = subtitle.isEmpty()
             )
 
@@ -78,7 +82,7 @@ fun AddScreen(navController: NavHostController, viewModel: MainViewModel) {
                 }
 
             }, enabled = isButtonEnables, modifier = Modifier.padding(top = 16.dp)) {
-                Text(text = "Add note")
+                Text(text = ADD_NOTE)
 
             }
         }
