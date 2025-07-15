@@ -2,7 +2,6 @@ package mir.errorcode.notesappmvvm.screens
 
 import android.app.Application
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -18,9 +17,9 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
@@ -34,15 +33,12 @@ import mir.errorcode.notesappmvvm.MainViewModelFactory
 import mir.errorcode.notesappmvvm.model.Note
 import mir.errorcode.notesappmvvm.navigation.NavRoute
 import mir.errorcode.notesappmvvm.ui.theme.NotesAppMVVMTheme
-import androidx.compose.runtime.livedata.observeAsState
 
 
 @Composable
-fun MainScreen(navController: NavHostController){
-    val context = LocalContext.current
-    val mViewModel: MainViewModel = viewModel(factory = MainViewModelFactory(context.applicationContext as Application))
+fun MainScreen(navController: NavHostController, viewModel: MainViewModel){
 
-
+    val notes = viewModel.readAllNotes().observeAsState(listOf()).value
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
@@ -59,22 +55,11 @@ fun MainScreen(navController: NavHostController){
                  modifier = Modifier
                     .padding(innerPadding)
              ) {
-//                 items(notes)  { note ->
-//                     NoteItem(note = note, navController = navController)
+                 items(notes)  { note ->
+                     NoteItem(note = note, navController = navController)
 
                  }
-         //}
-//            Column(
-//                modifier = Modifier
-//                    .fillMaxSize()
-//                    .padding(innerPadding)
-//            ) {
-//                NoteItem(title = "Note 1", subtitle = "Subtitle fot not 1 ", navController = navController)
-//                NoteItem(title = "Note 2", subtitle = "Subtitle fot not 2 ", navController = navController)
-//                NoteItem(title = "Note 3", subtitle = "Subtitle fot not 3 ", navController = navController)
-//                NoteItem(title = "Note 4", subtitle = "Subtitle fot not 4 ", navController = navController)
-//            }
-
+         }
 
         })
 
@@ -107,6 +92,8 @@ fun NoteItem(note: Note, navController: NavHostController){
 @Composable
 fun prevMainScreen(){
     NotesAppMVVMTheme {
-        MainScreen(navController = rememberNavController())
+        val context = LocalContext.current
+        val mViewModel: MainViewModel = viewModel(factory = MainViewModelFactory(context.applicationContext as Application))
+        MainScreen(navController = rememberNavController(), viewModel = mViewModel)
     }
 }

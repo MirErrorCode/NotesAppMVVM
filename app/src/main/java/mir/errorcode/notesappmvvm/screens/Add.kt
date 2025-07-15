@@ -1,5 +1,6 @@
 package mir.errorcode.notesappmvvm.screens
 
+import android.app.Application
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -15,22 +16,27 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.navigation.NavHost
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
+import mir.errorcode.notesappmvvm.MainViewModel
+import mir.errorcode.notesappmvvm.MainViewModelFactory
+import mir.errorcode.notesappmvvm.model.Note
 import mir.errorcode.notesappmvvm.navigation.NavRoute
 import mir.errorcode.notesappmvvm.ui.theme.NotesAppMVVMTheme
 
 
 @Composable
-fun AddScreen(navController: NavHostController) {
+fun AddScreen(navController: NavHostController, viewModel: MainViewModel) {
 
     var title by remember { mutableStateOf("") }
     var subtitle by remember { mutableStateOf("") }
+    var isButtonEnables by remember { mutableStateOf(false) }
 
     Scaffold(
         modifier = Modifier.fillMaxSize()
@@ -49,18 +55,29 @@ fun AddScreen(navController: NavHostController) {
 
             OutlinedTextField(
                 value = title,
-                onValueChange =  {title = it},
-                label = {Text(text= "Note title")}
+                onValueChange =  {
+                    title = it
+                    isButtonEnables = title.isNotEmpty() && subtitle.isNotEmpty()
+                                 },
+                label = {Text(text= "Note title")},
+                isError = title.isEmpty()
             )
             OutlinedTextField(
                 value = subtitle,
-                onValueChange =  {subtitle = it},
-                label = {Text(text= "Note subtitle")}
+                onValueChange =  {
+                    subtitle = it
+                    isButtonEnables = title.isNotEmpty() && subtitle.isNotEmpty()
+                                 },
+                label = {Text(text= "Note subtitle")},
+                isError = subtitle.isEmpty()
             )
 
             Button(onClick = {
+                viewModel.addNote(note = Note(title = title, subtitle = subtitle)) {
                     navController.navigate(NavRoute.Main.route)
-            }, modifier = Modifier.padding(top = 16.dp)) {
+                }
+
+            }, enabled = isButtonEnables, modifier = Modifier.padding(top = 16.dp)) {
                 Text(text = "Add note")
 
             }
@@ -77,6 +94,8 @@ fun AddScreen(navController: NavHostController) {
 @Composable
 fun pverAddScreen(){
     NotesAppMVVMTheme {
-        AddScreen(navController = rememberNavController())
+        val context = LocalContext.current
+        val mViewModel: MainViewModel = viewModel(factory = MainViewModelFactory(context.applicationContext as Application))
+        AddScreen(navController = rememberNavController(), viewModel = mViewModel)
     }
 }

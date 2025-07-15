@@ -14,6 +14,7 @@ class RoomRepository(private val noteRoomDao: NoteRoomDao) : DatabaseRepository 
         onSuccess: () -> Unit
     ) {
         noteRoomDao.addNote(note = note)
+        onSuccess()
     }
 
     override suspend fun update(
@@ -21,6 +22,7 @@ class RoomRepository(private val noteRoomDao: NoteRoomDao) : DatabaseRepository 
         onSuccess: () -> Unit
     ) {
         noteRoomDao.updateNote(note = note)
+        onSuccess()
     }
 
     override suspend fun delete(
@@ -28,6 +30,7 @@ class RoomRepository(private val noteRoomDao: NoteRoomDao) : DatabaseRepository 
         onSuccess: () -> Unit
     ) {
         noteRoomDao.deleteNote(note = note)
+        onSuccess()
     }
 
 
