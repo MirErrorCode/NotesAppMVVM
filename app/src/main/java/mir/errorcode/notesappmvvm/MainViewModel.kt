@@ -25,7 +25,7 @@ class MainViewModel(application : Application) : AndroidViewModel(application) {
 
 
 
-    fun initDatabase(type: String, onSuccess: () -> Unit){
+    fun initDatabase(type: String, onSuccess: () -> Unit, onFail: (String) -> Unit = {}) {
         Log.d("checkData", "MainViewModel initDatabase with type: $type")
         when(type) {
             TYPE_ROOM -> {
@@ -35,12 +35,9 @@ class MainViewModel(application : Application) : AndroidViewModel(application) {
             }
             TYPE_FIREBASE -> {
                 REPOSITORY = AppFirebaseRepository()
-                REPOSITORY.connectToDatabase({onSuccess()}){
-                    { Log.d("checkData", "Error: ${it}")}
-                }
+                REPOSITORY.connectToDatabase(onSuccess, onFail)
             }
         }
-
     }
 
     fun addNote(note: Note, onSuccess: () -> Unit) {

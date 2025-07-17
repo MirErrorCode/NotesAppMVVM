@@ -1,6 +1,7 @@
 package mir.errorcode.notesappmvvm.screens
 
 import android.app.Application
+import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -24,6 +25,8 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
+import com.google.firebase.Firebase
+import com.google.firebase.database.database
 import mir.errorcode.notesappmvvm.MainViewModel
 import mir.errorcode.notesappmvvm.MainViewModelFactory
 import mir.errorcode.notesappmvvm.model.Note
@@ -46,7 +49,9 @@ fun AddScreen(navController: NavHostController, viewModel: MainViewModel) {
         modifier = Modifier.fillMaxSize()
     ) { innerPadding ->
         Column(
-            modifier = Modifier.fillMaxSize().padding(innerPadding),
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
@@ -59,25 +64,36 @@ fun AddScreen(navController: NavHostController, viewModel: MainViewModel) {
 
             OutlinedTextField(
                 value = title,
-                onValueChange =  {
+                onValueChange = {
                     title = it
                     isButtonEnables = title.isNotEmpty() && subtitle.isNotEmpty()
-                                 },
-                label = {Text(text= NOTE_TITLE)},
+                },
+                label = { Text(text = NOTE_TITLE) },
                 isError = title.isEmpty()
             )
             OutlinedTextField(
                 value = subtitle,
-                onValueChange =  {
+                onValueChange = {
                     subtitle = it
                     isButtonEnables = title.isNotEmpty() && subtitle.isNotEmpty()
-                                 },
-                label = {Text(text= NOTE_SUBTITLE)},
+                },
+                label = { Text(text = NOTE_SUBTITLE) },
                 isError = subtitle.isEmpty()
             )
 
             Button(onClick = {
-                viewModel.addNote(note = Note(title = title, subtitle = subtitle)) {
+                val firebaseId = Firebase.database.reference.push().key ?: ""
+                Log.d(
+                    "AddScreen",
+                    "Adding note: firebaseId=$firebaseId, title=$title, subtitle=$subtitle"
+                )
+                viewModel.addNote(
+                    note = Note(
+                        title = title,
+                        subtitle = subtitle,
+                        firebaseId = firebaseId
+                    )
+                ) {
                     navController.navigate(NavRoute.Main.route)
                 }
 
@@ -91,15 +107,13 @@ fun AddScreen(navController: NavHostController, viewModel: MainViewModel) {
 }
 
 
-
-
-
 @Preview(showBackground = true)
 @Composable
-fun pverAddScreen(){
+fun pverAddScreen() {
     NotesAppMVVMTheme {
         val context = LocalContext.current
-        val mViewModel: MainViewModel = viewModel(factory = MainViewModelFactory(context.applicationContext as Application))
+        val mViewModel: MainViewModel =
+            viewModel(factory = MainViewModelFactory(context.applicationContext as Application))
         AddScreen(navController = rememberNavController(), viewModel = mViewModel)
     }
 }

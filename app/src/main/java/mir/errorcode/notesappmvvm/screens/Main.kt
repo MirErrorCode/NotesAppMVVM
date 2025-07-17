@@ -1,6 +1,7 @@
 package mir.errorcode.notesappmvvm.screens
 
 import android.app.Application
+import android.util.Log
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -33,6 +34,10 @@ import mir.errorcode.notesappmvvm.MainViewModelFactory
 import mir.errorcode.notesappmvvm.model.Note
 import mir.errorcode.notesappmvvm.navigation.NavRoute
 import mir.errorcode.notesappmvvm.ui.theme.NotesAppMVVMTheme
+import mir.errorcode.notesappmvvm.utils.Constants.Keys.EMPTY
+import mir.errorcode.notesappmvvm.utils.DB_TYPE
+import mir.errorcode.notesappmvvm.utils.TYPE_FIREBASE
+import mir.errorcode.notesappmvvm.utils.TYPE_ROOM
 
 
 @Composable
@@ -69,12 +74,19 @@ fun MainScreen(navController: NavHostController, viewModel: MainViewModel){
 
 @Composable
 fun NoteItem(note: Note, navController: NavHostController){
+    val noteId = when(DB_TYPE){
+        TYPE_FIREBASE -> note.firebaseId
+        TYPE_ROOM -> note.id
+        else -> EMPTY
+    }
+    Log.d("NoteItem", "Note clicked: firebaseId=${note.firebaseId}, title=${note.title}, subtitle=${note.subtitle}, noteId=$noteId")
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 8.dp, horizontal =  24.dp)
             .clickable {
-                navController.navigate(NavRoute.Note.route + "/${note.id}")
+                Log.d("NoteItem", "Navigating to NoteScreen with noteId=$noteId")
+                navController.navigate(NavRoute.Note.route + "/${noteId}")
             },
         elevation = CardDefaults.cardElevation(
             defaultElevation = 6.dp

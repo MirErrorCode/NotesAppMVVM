@@ -15,7 +15,7 @@ import mir.errorcode.notesappmvvm.utils.FIREBASE_ID
 import mir.errorcode.notesappmvvm.utils.LOGIN
 import mir.errorcode.notesappmvvm.utils.PASSWORD
 
-class AppFirebaseRepository: DatabaseRepository {
+class AppFirebaseRepository : DatabaseRepository {
 
     private val mAuth = FirebaseAuth.getInstance()
 
@@ -28,16 +28,28 @@ class AppFirebaseRepository: DatabaseRepository {
         note: Note,
         onSuccess: () -> Unit
     ) {
-        val noteId = database.push().key.toString()
+        //  val noteId = database.push().key.toString()
+        val noteId = note.firebaseId
         val mapNotes = hashMapOf<String, Any>()
 
         mapNotes[FIREBASE_ID] = noteId
         mapNotes[FIRE_TITLE] = note.title
         mapNotes[FIRE_SUBTITLE] = note.subtitle
-
+        Log.d(
+            "AppFirebaseRepository",
+            "Creating note: noteId=$noteId, inputFirebaseId=${note.firebaseId}, title=${note.title}, subtitle=${note.subtitle}"
+        )
         database.child(noteId).updateChildren(mapNotes)
-            .addOnSuccessListener { onSuccess() }
-            .addOnFailureListener { Log.d("CheckData", "Failure to add new note") }
+            .addOnSuccessListener {
+                onSuccess()
+                Log.d("AppFirebaseRepository", "Note created successfully: noteId=$noteId")
+            }
+            .addOnFailureListener {
+                Log.e(
+                    "AppFirebaseRepository",
+                    "Failure to add new note: ${it.message}"
+                )
+            }
     }
 
     override suspend fun update(
@@ -59,12 +71,15 @@ class AppFirebaseRepository: DatabaseRepository {
     }
 
     override fun connectToDatabase(onSuccess: () -> Unit, onFail: (String) -> Unit) {
+        Log.d("StartScreen", "Attempting sign-in with email=$LOGIN")
         mAuth.signInWithEmailAndPassword(LOGIN, PASSWORD)
-            .addOnSuccessListener { onSuccess }
-            .addOnFailureListener {
-                mAuth.createUserWithEmailAndPassword(LOGIN, PASSWORD)
-                    .addOnSuccessListener { onSuccess() }
-                    .addOnFailureListener { onFail(it.message.toString()) }
+            .addOnSuccessListener {
+                Log.d("StartScreen", "Sign-in successful: UID=${mAuth.currentUser?.uid}")
+                onSuccess()
+            }
+            .addOnFailureListener { exception ->
+                Log.e("StartScreen", "Sign-in failed: ${exception.message}")
+                onFail(exception.message.toString())
             }
     }
 }

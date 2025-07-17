@@ -1,6 +1,7 @@
 package mir.errorcode.notesappmvvm.screens
 
 import android.app.Application
+import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -51,14 +52,31 @@ import mir.errorcode.notesappmvvm.utils.Constants.Keys.SUBTITLE
 import mir.errorcode.notesappmvvm.utils.Constants.Keys.TITLE
 import mir.errorcode.notesappmvvm.utils.Constants.Keys.UPDATE
 import mir.errorcode.notesappmvvm.utils.Constants.Keys.UPDATE_NOTE
+import mir.errorcode.notesappmvvm.utils.DB_TYPE
+import mir.errorcode.notesappmvvm.utils.TYPE_FIREBASE
+import mir.errorcode.notesappmvvm.utils.TYPE_ROOM
 
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NoteScreen(navController: NavHostController, viewModel: MainViewModel, noteId: String?) {
-
+    Log.d("NoteScreen", "Received noteId = $noteId")
     val notes = viewModel.readAllNotes().observeAsState(listOf()).value
-    val note = notes.firstOrNull(){ it.id == noteId?.toInt()} ?: Note(title = NONE, subtitle = NONE)
+    Log.d("NoteScreen", "All notes = $notes")
+    val note = when (DB_TYPE) {
+        TYPE_ROOM -> {
+            notes.firstOrNull { it.id == noteId?.toInt() } ?: Note()
+            // Log.d("NoteScreen", "Invalid noteId for ROOM = $noteId")
+
+        }
+
+        TYPE_FIREBASE -> {
+            Log.d("NoteScreen", "Searching Firebase note with firebaseId=$noteId")
+            notes.firstOrNull { it.firebaseId == noteId } ?: Note()
+        }
+
+        else -> Note()
+    }
     var title by remember { mutableStateOf(EMPTY) }
     var subtitle by remember { mutableStateOf(EMPTY) }
 
@@ -90,8 +108,18 @@ fun NoteScreen(navController: NavHostController, viewModel: MainViewModel, noteI
                         .padding(vertical = 8.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Text(text = note.title, fontSize = 24.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.padding(top = 12.dp))
-                    Text(text = note.subtitle, fontSize = 18.sp, fontWeight = FontWeight.Light, modifier = Modifier.padding(top = 16.dp))
+                    Text(
+                        text = note.title,
+                        fontSize = 24.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        modifier = Modifier.padding(top = 12.dp)
+                    )
+                    Text(
+                        text = note.subtitle,
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Light,
+                        modifier = Modifier.padding(top = 16.dp)
+                    )
                 }
             }
             Row(
@@ -110,9 +138,9 @@ fun NoteScreen(navController: NavHostController, viewModel: MainViewModel, noteI
                 }
 
                 Button(onClick = {
-                        viewModel.deleteNote(note = note) {
-                            navController.navigate(NavRoute.Main.route)
-                        }
+                    viewModel.deleteNote(note = note) {
+                        navController.navigate(NavRoute.Main.route)
+                    }
                 }) {
                     Text(text = DELETE)
                 }
@@ -140,7 +168,9 @@ fun NoteScreen(navController: NavHostController, viewModel: MainViewModel, noteI
             shape = RoundedCornerShape(topStart = 30.dp, topEnd = 30.dp)
         ) {
             Surface {
-                Column(modifier = Modifier.fillMaxWidth().padding(32.dp)) {
+                Column(modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(32.dp)) {
                     Text(
                         text = EDIT_NOTE,
                         fontSize = 18.sp,
@@ -162,8 +192,15 @@ fun NoteScreen(navController: NavHostController, viewModel: MainViewModel, noteI
                     Button(
                         modifier = Modifier.padding(top = 16.dp),
                         onClick = {
-                            viewModel.updateNote(note =
-                            Note(id = note.id,title = title, subtitle = subtitle)){
+                            viewModel.updateNote(
+                                note =
+                                    Note(
+                                        id = note.id,
+                                        title = title,
+                                        subtitle = subtitle,
+                                        firebaseId = note.firebaseId
+                                    )
+                            ) {
                                 coroutineScope.launch { bottomSheetState.hide() }
                             }
                         }
@@ -179,10 +216,11 @@ fun NoteScreen(navController: NavHostController, viewModel: MainViewModel, noteI
 
 @Preview(showBackground = true)
 @Composable
-fun prevNoteScreen(){
+fun prevNoteScreen() {
     NotesAppMVVMTheme {
         val context = LocalContext.current
-        val mViewModel: MainViewModel = viewModel(factory = MainViewModelFactory(context.applicationContext as Application))
+        val mViewModel: MainViewModel =
+            viewModel(factory = MainViewModelFactory(context.applicationContext as Application))
         NoteScreen(
             navController = rememberNavController(),
             viewModel = mViewModel,

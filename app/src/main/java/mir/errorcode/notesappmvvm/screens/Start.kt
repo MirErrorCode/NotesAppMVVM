@@ -33,6 +33,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
+import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.launch
 import mir.errorcode.notesappmvvm.MainViewModel
 import mir.errorcode.notesappmvvm.MainViewModelFactory
@@ -48,6 +49,7 @@ import mir.errorcode.notesappmvvm.utils.Constants.Keys.SING_IN
 import mir.errorcode.notesappmvvm.utils.Constants.Keys.SUBTITLE
 import mir.errorcode.notesappmvvm.utils.Constants.Keys.TITLE
 import mir.errorcode.notesappmvvm.utils.Constants.Keys.WHAT_WILL_WE_USE
+import mir.errorcode.notesappmvvm.utils.DB_TYPE
 import mir.errorcode.notesappmvvm.utils.LOGIN
 import mir.errorcode.notesappmvvm.utils.PASSWORD
 import mir.errorcode.notesappmvvm.utils.TYPE_FIREBASE
@@ -56,11 +58,12 @@ import mir.errorcode.notesappmvvm.utils.TYPE_ROOM
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun StartScreen(navController: NavHostController, viewModel: MainViewModel){
+fun StartScreen(navController: NavHostController, viewModel: MainViewModel) {
 
 
     var login by remember { mutableStateOf(EMPTY) }
     var password by remember { mutableStateOf(EMPTY) }
+    var errorMessage by remember { mutableStateOf(EMPTY) }
 
     val bottomSheetState = rememberModalBottomSheetState(
         skipPartiallyExpanded = false,
@@ -72,17 +75,20 @@ fun StartScreen(navController: NavHostController, viewModel: MainViewModel){
     Scaffold(
         modifier = Modifier.fillMaxSize()
     ) { innerPadding ->
-        Column (
-            modifier = Modifier.fillMaxSize().padding(innerPadding),
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
-        ){
+        ) {
             Text(text = WHAT_WILL_WE_USE)
             Button(
                 onClick = {
-                    viewModel.initDatabase(TYPE_ROOM) {
+                    viewModel.initDatabase(TYPE_ROOM, {
+                        DB_TYPE = TYPE_ROOM
                         navController.navigate(route = NavRoute.Main.route)
-                    }
+                    })
 
                 },
                 modifier = Modifier
@@ -117,7 +123,9 @@ fun StartScreen(navController: NavHostController, viewModel: MainViewModel){
             shape = RoundedCornerShape(topStart = 30.dp, topEnd = 30.dp)
         ) {
             Surface {
-                Column(modifier = Modifier.fillMaxWidth().padding(32.dp)) {
+                Column(modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(32.dp)) {
                     Text(
                         text = LOG_IN,
                         fontSize = 18.sp,
@@ -136,75 +144,108 @@ fun StartScreen(navController: NavHostController, viewModel: MainViewModel){
                         label = { Text(text = PASSWORD_TEXT) },
                         isError = password.isEmpty()
                     )
+                    if (errorMessage.isNotEmpty()) {
+                        Text(
+                            text = errorMessage,
+                            color = androidx.compose.ui.graphics.Color.Red,
+                            modifier = Modifier.padding(vertical = 8.dp)
+                        )
+                    }
                     Button(
                         modifier = Modifier.padding(top = 16.dp),
                         onClick = {
                             LOGIN = login
                             PASSWORD = password
-                            viewModel.initDatabase(TYPE_FIREBASE) {
-                                    navController.navigate(NavRoute.Main.route)
-                            }
+                            Log.d(
+                                "StartScreen",
+                                "Login button clicked: email=$login, password=$password"
+                            )
+                            viewModel.initDatabase(TYPE_FIREBASE, {
+                                DB_TYPE = TYPE_FIREBASE
+                                errorMessage = EMPTY
+                                navController.navigate(NavRoute.Main.route)
+                            }, { error ->
+                                errorMessage = error
+                                Log.e("StartScreen", "Firebase auth failed: $error")
+                            })
                         },
                         enabled = login.isNotBlank() && password.isNotBlank()
                     ) {
                         Text(text = SING_IN)
                     }
+                    Button(
+                        modifier = Modifier.padding(top = 8.dp),
+                        onClick = {
+                            Log.d(
+                                "StartScreen",
+                                "Register button clicked: email=$login, password=$password"
+                            )
+                            FirebaseAuth.getInstance()
+                                .createUserWithEmailAndPassword(login, password)
+                                .addOnSuccessListener {
+                                    Log.d(
+                                        "StartScreen",
+                                        "User created: $login, UID=${it.user?.uid}"
+                                    )
+                                    LOGIN = login
+                                    PASSWORD = password
+                                    viewModel.initDatabase(TYPE_FIREBASE, {
+                                        DB_TYPE = TYPE_FIREBASE
+                                        errorMessage = EMPTY
+                                        navController.navigate(NavRoute.Main.route)
+                                    }, { error ->
+                                        errorMessage = error
+                                        Log.e("StartScreen", "Firebase create failed: $error")
+                                    })
+                                }
+                                .addOnFailureListener { exception ->
+                                    errorMessage = exception.message.toString()
+                                    Log.e(
+                                        "StartScreen",
+                                        "User creation failed: ${exception.message}"
+                                    )
+                                }
+                        },
+                        enabled = login.isNotBlank() && password.isNotBlank()
+                    ) {
+                        Text(text = "Sing Up")
+                    }
+                    Button(
+                        modifier = Modifier.padding(top = 8.dp),
+                        onClick = {
+                            Log.d("StartScreen", "Reset password clicked: email=$login")
+                            FirebaseAuth.getInstance().sendPasswordResetEmail(login)
+                                .addOnSuccessListener {
+                                    errorMessage = "Reset link sent"
+                                    Log.d("StartScreen", "Password reset email sent to $login")
+                                }
+                                .addOnFailureListener { exception ->
+                                    errorMessage = exception.message.toString()
+                                    Log.e(
+                                        "StartScreen",
+                                        "Password reset failed: ${exception.message}"
+                                    )
+                                }
+                        },
+                        enabled = login.isNotBlank()
+                    ) {
+                        Text(text = "Reset password")
+                    }
                 }
             }
-
         }
-
-
-
-    }
     }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+}
 
 
 @Preview(showBackground = true)
 @Composable
-fun prevStartScreen(){
+fun prevStartScreen() {
     NotesAppMVVMTheme {
         val context = LocalContext.current
-        val mViewModel: MainViewModel = viewModel(factory = MainViewModelFactory(context.applicationContext as Application))
+        val mViewModel: MainViewModel =
+            viewModel(factory = MainViewModelFactory(context.applicationContext as Application))
         StartScreen(navController = rememberNavController(), viewModel = mViewModel)
     }
 }
