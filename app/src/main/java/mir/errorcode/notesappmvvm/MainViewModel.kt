@@ -13,6 +13,8 @@ import mir.errorcode.notesappmvvm.database.firebase.AppFirebaseRepository
 import mir.errorcode.notesappmvvm.database.room.AppRoomDatabase
 import mir.errorcode.notesappmvvm.database.room.repository.RoomRepository
 import mir.errorcode.notesappmvvm.model.Note
+import mir.errorcode.notesappmvvm.utils.Constants.Keys.EMPTY
+import mir.errorcode.notesappmvvm.utils.DB_TYPE
 import mir.errorcode.notesappmvvm.utils.REPOSITORY
 import mir.errorcode.notesappmvvm.utils.TYPE_FIREBASE
 import mir.errorcode.notesappmvvm.utils.TYPE_ROOM
@@ -74,6 +76,19 @@ class MainViewModel(application : Application) : AndroidViewModel(application) {
 
 
     fun readAllNotes() = REPOSITORY.readAll
+
+    fun signOut(onSuccess: () -> Unit){
+        when(DB_TYPE.value){
+            TYPE_FIREBASE,
+                TYPE_ROOM -> {
+                    REPOSITORY.singOut()
+                    DB_TYPE.value = EMPTY
+                    onSuccess()
+                }
+            else -> {Log.d("MainViewModel", "singOut: Else: ${DB_TYPE.value}" )}
+        }
+
+    }
 
 }
 

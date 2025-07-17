@@ -86,7 +86,7 @@ fun StartScreen(navController: NavHostController, viewModel: MainViewModel) {
             Button(
                 onClick = {
                     viewModel.initDatabase(TYPE_ROOM, {
-                        DB_TYPE = TYPE_ROOM
+                        DB_TYPE.value = TYPE_ROOM
                         navController.navigate(route = NavRoute.Main.route)
                     })
 
@@ -161,7 +161,7 @@ fun StartScreen(navController: NavHostController, viewModel: MainViewModel) {
                                 "Login button clicked: email=$login, password=$password"
                             )
                             viewModel.initDatabase(TYPE_FIREBASE, {
-                                DB_TYPE = TYPE_FIREBASE
+                                DB_TYPE.value = TYPE_FIREBASE
                                 errorMessage = EMPTY
                                 navController.navigate(NavRoute.Main.route)
                             }, { error ->
@@ -190,7 +190,7 @@ fun StartScreen(navController: NavHostController, viewModel: MainViewModel) {
                                     LOGIN = login
                                     PASSWORD = password
                                     viewModel.initDatabase(TYPE_FIREBASE, {
-                                        DB_TYPE = TYPE_FIREBASE
+                                        DB_TYPE.value = TYPE_FIREBASE
                                         errorMessage = EMPTY
                                         navController.navigate(NavRoute.Main.route)
                                     }, { error ->

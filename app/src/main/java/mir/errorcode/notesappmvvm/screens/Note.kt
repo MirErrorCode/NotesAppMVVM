@@ -63,7 +63,7 @@ fun NoteScreen(navController: NavHostController, viewModel: MainViewModel, noteI
     Log.d("NoteScreen", "Received noteId = $noteId")
     val notes = viewModel.readAllNotes().observeAsState(listOf()).value
     Log.d("NoteScreen", "All notes = $notes")
-    val note = when (DB_TYPE) {
+    val note = when (DB_TYPE.value) {
         TYPE_ROOM -> {
             notes.firstOrNull { it.id == noteId?.toInt() } ?: Note()
             // Log.d("NoteScreen", "Invalid noteId for ROOM = $noteId")

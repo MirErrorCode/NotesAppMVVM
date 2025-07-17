@@ -33,5 +33,5 @@ class RoomRepository(private val noteRoomDao: NoteRoomDao) : DatabaseRepository 
         onSuccess()
     }
 
-
+    override fun singOut() {}
 }
